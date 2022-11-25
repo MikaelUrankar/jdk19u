@@ -26,7 +26,20 @@
 #ifndef OS_CPU_BSD_RISCV_BYTES_BSD_RISCV_HPP
 #define OS_CPU_BSD_RISCV_BYTES_BSD_RISCV_HPP
 
-#include <byteswap.h>
+#if defined(__FreeBSD__)
+  #define bswap_16(x) __bswap16(x)
+  #define bswap_32(x) __bswap32(x)
+  #define bswap_64(x) __bswap64(x)
+#elif defined(__OpenBSD__)
+  #define bswap_16(x) swap16(x)
+  #define bswap_32(x) swap32(x)
+  #define bswap_64(x) swap64(x)
+#elif defined(__NetBSD__)
+  #define bswap_16(x) bswap16(x)
+  #define bswap_32(x) bswap32(x)
+  #define bswap_64(x) bswap64(x)
+#  error "Unimplemented"
+#endif
 
 // Efficient swapping of data bytes from Java byte
 // ordering to native byte ordering and vice versa.
