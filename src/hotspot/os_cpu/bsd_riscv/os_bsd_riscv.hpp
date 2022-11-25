@@ -23,8 +23,8 @@
  *
  */
 
-#ifndef OS_CPU_LINUX_RISCV_VM_OS_LINUX_RISCV_HPP
-#define OS_CPU_LINUX_RISCV_VM_OS_LINUX_RISCV_HPP
+#ifndef OS_CPU_BSD_RISCV_VM_OS_BSD_RISCV_HPP
+#define OS_CPU_BSD_RISCV_VM_OS_BSD_RISCV_HPP
 
   static void setup_fpu();
 
@@ -56,4 +56,4 @@
                       : "memory");
   }
 
-#endif // OS_CPU_LINUX_RISCV_VM_OS_LINUX_RISCV_HPP
+#endif // OS_CPU_BSD_RISCV_VM_OS_BSD_RISCV_HPP

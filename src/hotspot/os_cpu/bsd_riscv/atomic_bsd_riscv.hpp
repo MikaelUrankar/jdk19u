@@ -23,8 +23,8 @@
  *
  */
 
-#ifndef OS_CPU_LINUX_RISCV_ATOMIC_LINUX_RISCV_HPP
-#define OS_CPU_LINUX_RISCV_ATOMIC_LINUX_RISCV_HPP
+#ifndef OS_CPU_BSD_RISCV_ATOMIC_BSD_RISCV_HPP
+#define OS_CPU_BSD_RISCV_ATOMIC_BSD_RISCV_HPP
 
 #include "runtime/vm_version.hpp"
 
@@ -131,4 +131,4 @@ struct Atomic::PlatformOrderedStore<byte_size, RELEASE_X_FENCE>
   void operator()(volatile T* p, T v) const { release_store(p, v); OrderAccess::fence(); }
 };
 
-#endif // OS_CPU_LINUX_RISCV_ATOMIC_LINUX_RISCV_HPP
+#endif // OS_CPU_BSD_RISCV_ATOMIC_BSD_RISCV_HPP

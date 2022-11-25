@@ -23,8 +23,8 @@
  *
  */
 
-#ifndef OS_CPU_LINUX_RISCV_BYTES_LINUX_RISCV_HPP
-#define OS_CPU_LINUX_RISCV_BYTES_LINUX_RISCV_HPP
+#ifndef OS_CPU_BSD_RISCV_BYTES_BSD_RISCV_HPP
+#define OS_CPU_BSD_RISCV_BYTES_BSD_RISCV_HPP
 
 #include <byteswap.h>
 
@@ -42,4 +42,4 @@ inline u8 Bytes::swap_u8(u8 x) {
   return bswap_64(x);
 }
 
-#endif // OS_CPU_LINUX_RISCV_BYTES_LINUX_RISCV_HPP
+#endif // OS_CPU_BSD_RISCV_BYTES_BSD_RISCV_HPP

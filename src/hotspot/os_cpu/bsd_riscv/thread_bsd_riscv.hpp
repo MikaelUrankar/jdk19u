@@ -23,8 +23,8 @@
  *
  */
 
-#ifndef OS_CPU_LINUX_RISCV_THREAD_LINUX_RISCV_HPP
-#define OS_CPU_LINUX_RISCV_THREAD_LINUX_RISCV_HPP
+#ifndef OS_CPU_BSD_RISCV_THREAD_BSD_RISCV_HPP
+#define OS_CPU_BSD_RISCV_THREAD_BSD_RISCV_HPP
 
  private:
   void pd_initialize() {
@@ -45,4 +45,4 @@
 private:
   bool pd_get_top_frame(frame* fr_addr, void* ucontext, bool isInJava);
 
-#endif // OS_CPU_LINUX_RISCV_THREAD_LINUX_RISCV_HPP
+#endif // OS_CPU_BSD_RISCV_THREAD_BSD_RISCV_HPP

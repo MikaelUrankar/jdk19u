@@ -23,8 +23,8 @@
  *
  */
 
-#ifndef OS_CPU_LINUX_RISCV_ORDERACCESS_LINUX_RISCV_HPP
-#define OS_CPU_LINUX_RISCV_ORDERACCESS_LINUX_RISCV_HPP
+#ifndef OS_CPU_BSD_RISCV_ORDERACCESS_BSD_RISCV_HPP
+#define OS_CPU_BSD_RISCV_ORDERACCESS_BSD_RISCV_HPP
 
 // Included in orderAccess.hpp header file.
 
@@ -60,4 +60,4 @@ inline void OrderAccess::cross_modify_fence_impl() {
   }
 }
 
-#endif // OS_CPU_LINUX_RISCV_ORDERACCESS_LINUX_RISCV_HPP
+#endif // OS_CPU_BSD_RISCV_ORDERACCESS_BSD_RISCV_HPP

@@ -33,7 +33,7 @@
 #include "interpreter/interpreter.hpp"
 #include "jvm.h"
 #include "memory/allocation.inline.hpp"
-#include "os_share_linux.hpp"
+#include "os_share_bsd.hpp"
 #include "prims/jniFastGetField.hpp"
 #include "prims/jvm_misc.hpp"
 #include "runtime/arguments.hpp"
@@ -94,11 +94,11 @@ void os::Posix::ucontext_set_pc(ucontext_t * uc, address pc) {
   uc->uc_mcontext.__gregs[REG_PC] = (intptr_t)pc;
 }
 
-intptr_t* os::Linux::ucontext_get_sp(const ucontext_t * uc) {
+intptr_t* os::Bsd::ucontext_get_sp(const ucontext_t * uc) {
   return (intptr_t*)uc->uc_mcontext.__gregs[REG_SP];
 }
 
-intptr_t* os::Linux::ucontext_get_fp(const ucontext_t * uc) {
+intptr_t* os::Bsd::ucontext_get_fp(const ucontext_t * uc) {
   return (intptr_t*)uc->uc_mcontext.__gregs[REG_FP];
 }
 
@@ -110,10 +110,10 @@ address os::fetch_frame_from_context(const void* ucVoid,
   if (uc != NULL) {
     epc = os::Posix::ucontext_get_pc(uc);
     if (ret_sp != NULL) {
-      *ret_sp = os::Linux::ucontext_get_sp(uc);
+      *ret_sp = os::Bsd::ucontext_get_sp(uc);
     }
     if (ret_fp != NULL) {
-      *ret_fp = os::Linux::ucontext_get_fp(uc);
+      *ret_fp = os::Bsd::ucontext_get_fp(uc);
     }
   } else {
     epc = NULL;
@@ -133,8 +133,8 @@ frame os::fetch_compiled_frame_from_context(const void* ucVoid) {
   // In compiled code, the stack banging is performed before RA
   // has been saved in the frame. RA is live, and SP and FP
   // belong to the caller.
-  intptr_t* frame_fp = os::Linux::ucontext_get_fp(uc);
-  intptr_t* frame_sp = os::Linux::ucontext_get_sp(uc);
+  intptr_t* frame_fp = os::Bsd::ucontext_get_fp(uc);
+  intptr_t* frame_sp = os::Bsd::ucontext_get_sp(uc);
   address frame_pc = (address)(uc->uc_mcontext.__gregs[REG_LR]
                          - NativeInstruction::instruction_size);
   return frame(frame_sp, frame_fp, frame_pc);
@@ -293,14 +293,14 @@ bool PosixSignals::pd_hotspot_signal_handler(int sig, siginfo_t* info,
   return false; // Mute compiler
 }
 
-void os::Linux::init_thread_fpu_state(void) {
+void os::Bsd::init_thread_fpu_state(void) {
 }
 
-int os::Linux::get_fpu_control_word(void) {
+int os::Bsd::get_fpu_control_word(void) {
   return 0;
 }
 
-void os::Linux::set_fpu_control_word(int fpu_control) {
+void os::Bsd::set_fpu_control_word(int fpu_control) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -349,7 +349,7 @@ void os::print_tos_pc(outputStream *st, const void *context) {
 
   const ucontext_t* uc = (const ucontext_t*)context;
 
-  intptr_t *frame_sp = (intptr_t *)os::Linux::ucontext_get_sp(uc);
+  intptr_t *frame_sp = (intptr_t *)os::Bsd::ucontext_get_sp(uc);
   st->print_cr("Top of Stack: (sp=" PTR_FORMAT ")", p2i(frame_sp));
   print_hex_dump(st, (address)frame_sp, (address)(frame_sp + 64), sizeof(intptr_t));
   st->cr();

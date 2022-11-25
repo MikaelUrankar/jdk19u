@@ -79,13 +79,13 @@ void VM_Version::get_os_cpu_info() {
 
   uint64_t auxv = getauxval(AT_HWCAP);
 
-  static_assert(CPU_I == HWCAP_ISA_I, "Flag CPU_I must follow Linux HWCAP");
-  static_assert(CPU_M == HWCAP_ISA_M, "Flag CPU_M must follow Linux HWCAP");
-  static_assert(CPU_A == HWCAP_ISA_A, "Flag CPU_A must follow Linux HWCAP");
-  static_assert(CPU_F == HWCAP_ISA_F, "Flag CPU_F must follow Linux HWCAP");
-  static_assert(CPU_D == HWCAP_ISA_D, "Flag CPU_D must follow Linux HWCAP");
-  static_assert(CPU_C == HWCAP_ISA_C, "Flag CPU_C must follow Linux HWCAP");
-  static_assert(CPU_V == HWCAP_ISA_V, "Flag CPU_V must follow Linux HWCAP");
+  static_assert(CPU_I == HWCAP_ISA_I, "Flag CPU_I must follow Bsd HWCAP");
+  static_assert(CPU_M == HWCAP_ISA_M, "Flag CPU_M must follow Bsd HWCAP");
+  static_assert(CPU_A == HWCAP_ISA_A, "Flag CPU_A must follow Bsd HWCAP");
+  static_assert(CPU_F == HWCAP_ISA_F, "Flag CPU_F must follow Bsd HWCAP");
+  static_assert(CPU_D == HWCAP_ISA_D, "Flag CPU_D must follow Bsd HWCAP");
+  static_assert(CPU_C == HWCAP_ISA_C, "Flag CPU_C must follow Bsd HWCAP");
+  static_assert(CPU_V == HWCAP_ISA_V, "Flag CPU_V must follow Bsd HWCAP");
 
   // RISC-V has four bit-manipulation ISA-extensions: Zba/Zbb/Zbc/Zbs.
   // Availability for those extensions could not be queried from HWCAP.
