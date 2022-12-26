@@ -54,25 +54,37 @@
 #include "utilities/vmError.hpp"
 
 // put OS-includes here
-# include <dlfcn.h>
-# include <fpu_control.h>
-# include <errno.h>
+# include <sys/types.h>
+# include <sys/mman.h>
 # include <pthread.h>
 # include <signal.h>
-# include <stdio.h>
+# include <errno.h>
+# include <dlfcn.h>
 # include <stdlib.h>
-# include <sys/mman.h>
+# include <stdio.h>
+# include <unistd.h>
 # include <sys/resource.h>
-# include <sys/socket.h>
 # include <sys/stat.h>
 # include <sys/time.h>
-# include <sys/types.h>
 # include <sys/utsname.h>
+# include <sys/socket.h>
 # include <sys/wait.h>
-# include <poll.h>
 # include <pwd.h>
+# include <poll.h>
+#ifndef __OpenBSD__
 # include <ucontext.h>
-# include <unistd.h>
+#endif
+#ifdef __FreeBSD__
+# include <ucontext.h>
+# include <sys/sysctl.h>
+# include <sys/procctl.h>
+# ifndef PROC_STACKGAP_STATUS
+#  define PROC_STACKGAP_STATUS	18
+# endif
+# ifndef PROC_STACKGAP_DISABLE
+#  define PROC_STACKGAP_DISABLE	0x0002
+# endif
+#endif /* __FreeBSD__ */
 
 #define REG_LR       1
 #define REG_FP       8
@@ -87,19 +99,19 @@ char* os::non_memory_address_word() {
 }
 
 address os::Posix::ucontext_get_pc(const ucontext_t * uc) {
-  return (address)uc->uc_mcontext.__gregs[REG_PC];
+  return (address)uc->uc_mcontext.mc_gpregs.gp_sepc;
 }
 
 void os::Posix::ucontext_set_pc(ucontext_t * uc, address pc) {
-  uc->uc_mcontext.__gregs[REG_PC] = (intptr_t)pc;
+  uc->uc_mcontext.mc_gpregs.gp_sepc = (intptr_t)pc;
 }
 
 intptr_t* os::Bsd::ucontext_get_sp(const ucontext_t * uc) {
-  return (intptr_t*)uc->uc_mcontext.__gregs[REG_SP];
+  return (intptr_t*)uc->uc_mcontext.mc_gpregs.gp_sp;
 }
 
 intptr_t* os::Bsd::ucontext_get_fp(const ucontext_t * uc) {
-  return (intptr_t*)uc->uc_mcontext.__gregs[REG_FP];
+  return (intptr_t*)uc->uc_mcontext.mc_gpregs.gp_s[0];
 }
 
 address os::fetch_frame_from_context(const void* ucVoid,
@@ -135,7 +147,7 @@ frame os::fetch_compiled_frame_from_context(const void* ucVoid) {
   // belong to the caller.
   intptr_t* frame_fp = os::Bsd::ucontext_get_fp(uc);
   intptr_t* frame_sp = os::Bsd::ucontext_get_sp(uc);
-  address frame_pc = (address)(uc->uc_mcontext.__gregs[REG_LR]
+  address frame_pc = (address)(uc->uc_mcontext.mc_gpregs.gp_ra
                          - NativeInstruction::instruction_size);
   return frame(frame_sp, frame_fp, frame_pc);
 }
@@ -193,6 +205,55 @@ bool PosixSignals::pd_hotspot_signal_handler(int sig, siginfo_t* info,
 
     // Handle ALL stack overflow variations here
     if (sig == SIGSEGV) {
+#ifdef __FreeBSD__
+      /*
+       * Determine whether the kernel stack guard pages have been disabled
+       */
+      int status = 0;
+      int ret = procctl(P_PID, getpid(), PROC_STACKGAP_STATUS, &status);
+
+      /*
+       * Check if the call to procctl(2) failed or the stack guard is not
+       * disabled.  Either way, we'll then attempt a workaround.
+       */
+      if (ret == -1 || !(status & PROC_STACKGAP_DISABLE)) {
+          /*
+           * Try to work around the problems caused on FreeBSD where the kernel
+           * may place guard pages above JVM guard pages and prevent the Java
+           * thread stacks growing into the JVM guard pages.  The work around
+           * is to determine how many such pages there may be and round down the
+           * fault address so that tests of whether it is in the JVM guard zone
+           * succeed.
+           *
+           * Note that this is a partial workaround at best since the normally
+           * the JVM could then unprotect the reserved area to allow a critical
+           * section to complete.  This is not possible if the kernel has
+           * placed guard pages below the reserved area.
+           *
+           * This also suffers from the problem that the
+           * security.bsd.stack_guard_page sysctl is dynamic and may have
+           * changed since the stack was allocated.  This is likely to be rare
+           * in practice though.
+           *
+           * What this does do is prevent the JVM crashing on FreeBSD and
+           * instead throwing a StackOverflowError when infinite recursion
+           * is attempted, which is the expected behaviour.  Due to it's
+           * limitations though, objects may be in unexpected states when
+           * this occurs.
+           *
+           * A better way to avoid these problems is either to be on a new
+           * enough version of FreeBSD (one that has PROC_STACKGAP_CTL) or set
+           * security.bsd.stack_guard_page to zero.
+           */
+          int guard_pages = 0;
+          size_t size = sizeof(guard_pages);
+          if (sysctlbyname("security.bsd.stack_guard_page",
+                           &guard_pages, &size, NULL, 0) == 0 &&
+              guard_pages > 0) {
+            addr -= guard_pages * os::vm_page_size();
+          }
+      }
+#endif
       // check if fault address is within thread stack
       if (thread->is_in_full_stack(addr)) {
         if (os::Posix::handle_stack_overflow(thread, addr, pc, uc, &stub)) {
@@ -241,7 +302,7 @@ bool PosixSignals::pd_hotspot_signal_handler(int sig, siginfo_t* info,
 
         // End life with a fatal error, message and detail message and the context.
         // Note: no need to do any post-processing here (e.g. signal chaining)
-        va_list va_dummy;
+        va_list va_dummy = nullptr;
         VMError::report_and_die(thread, uc, NULL, 0, msg, detail_msg, va_dummy);
         va_end(va_dummy);
 
@@ -296,13 +357,6 @@ bool PosixSignals::pd_hotspot_signal_handler(int sig, siginfo_t* info,
 void os::Bsd::init_thread_fpu_state(void) {
 }
 
-int os::Bsd::get_fpu_control_word(void) {
-  return 0;
-}
-
-void os::Bsd::set_fpu_control_word(int fpu_control) {
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // thread stack
 
@@ -339,7 +393,7 @@ void os::print_context(outputStream *st, const void *context) {
 
   st->print_cr("Registers:");
   for (int r = 0; r < 32; r++) {
-    st->print_cr("%-*.*s=" INTPTR_FORMAT, 8, 8, reg_abi_names[r], (uintptr_t)uc->uc_mcontext.__gregs[r]);
+//    st->print_cr("%-*.*s=" INTPTR_FORMAT, 8, 8, reg_abi_names[r], (uintptr_t)uc->uc_mcontext.__gregs[r]);
   }
   st->cr();
 }
@@ -378,7 +432,7 @@ void os::print_register_info(outputStream *st, const void *context) {
 
   for (int r = 0; r < 32; r++) {
     st->print("%-*.*s=", 8, 8, reg_abi_names[r]);
-    print_location(st, uc->uc_mcontext.__gregs[r]);
+//    print_location(st, uc->uc_mcontext.__gregs[r]);
   }
   st->cr();
 }
