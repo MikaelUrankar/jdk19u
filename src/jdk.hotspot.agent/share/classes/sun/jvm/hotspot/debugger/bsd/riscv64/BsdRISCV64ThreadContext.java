@@ -24,16 +24,16 @@
  *
  */
 
-package sun.jvm.hotspot.debugger.linux.riscv64;
+package sun.jvm.hotspot.debugger.bsd.riscv64;
 
 import sun.jvm.hotspot.debugger.*;
 import sun.jvm.hotspot.debugger.riscv64.*;
-import sun.jvm.hotspot.debugger.linux.*;
+import sun.jvm.hotspot.debugger.bsd.*;
 
-public class LinuxRISCV64ThreadContext extends RISCV64ThreadContext {
-  private LinuxDebugger debugger;
+public class BsdRISCV64ThreadContext extends RISCV64ThreadContext {
+  private BsdDebugger debugger;
 
-  public LinuxRISCV64ThreadContext(LinuxDebugger debugger) {
+  public BsdRISCV64ThreadContext(BsdDebugger debugger) {
     super();
     this.debugger = debugger;
   }

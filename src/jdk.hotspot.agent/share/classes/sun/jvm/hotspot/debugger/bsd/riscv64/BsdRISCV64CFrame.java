@@ -24,19 +24,19 @@
  *
  */
 
-package sun.jvm.hotspot.debugger.linux.riscv64;
+package sun.jvm.hotspot.debugger.bsd.riscv64;
 
 import sun.jvm.hotspot.debugger.*;
 import sun.jvm.hotspot.debugger.riscv64.*;
-import sun.jvm.hotspot.debugger.linux.*;
+import sun.jvm.hotspot.debugger.bsd.*;
 import sun.jvm.hotspot.debugger.cdbg.*;
 import sun.jvm.hotspot.debugger.cdbg.basic.*;
 
-public final class LinuxRISCV64CFrame extends BasicCFrame {
+public final class BsdRISCV64CFrame extends BasicCFrame {
    private static final int C_FRAME_LINK_OFFSET        = -2;
    private static final int C_FRAME_RETURN_ADDR_OFFSET = -1;
 
-   public LinuxRISCV64CFrame(LinuxDebugger dbg, Address fp, Address pc) {
+   public BsdRISCV64CFrame(BsdDebugger dbg, Address fp, Address pc) {
       super(dbg.getCDebugger());
       this.fp = fp;
       this.pc = pc;
@@ -78,7 +78,7 @@ public final class LinuxRISCV64CFrame extends BasicCFrame {
       if (nextPC == null) {
         return null;
       }
-      return new LinuxRISCV64CFrame(dbg, nextFP, nextPC);
+      return new BsdRISCV64CFrame(dbg, nextFP, nextPC);
    }
 
    // package/class internals only
@@ -86,5 +86,5 @@ public final class LinuxRISCV64CFrame extends BasicCFrame {
    private Address pc;
    private Address sp;
    private Address fp;
-   private LinuxDebugger dbg;
+   private BsdDebugger dbg;
 }
