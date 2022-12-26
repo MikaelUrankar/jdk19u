@@ -241,6 +241,8 @@ static char cpu_arch[] = "aarch64";
 static char cpu_arch[] = "ppc";
 #elif defined(PPC64)
 static char cpu_arch[] = "ppc64";
+#elif defined(RISCV64)
+static char cpu_arch[] = "riscv64";
 #else
   #error Add appropriate cpu_arch setting
 #endif
@@ -1159,6 +1161,10 @@ void * os::dll_load(const char *filename, char *ebuf, int ebuflen) {
     #define EM_AARCH64     183              /* ARM AARCH64 */
   #endif
 
+  #ifndef EM_RISCV
+    #define EM_RISCV      243               /* RISC-V */
+  #endif
+
   static const arch_t arch_array[]={
     {EM_386,         EM_386,     ELFCLASS32, ELFDATA2LSB, (char*)"IA 32"},
     {EM_486,         EM_386,     ELFCLASS32, ELFDATA2LSB, (char*)"IA 32"},
@@ -1173,7 +1179,8 @@ void * os::dll_load(const char *filename, char *ebuf, int ebuflen) {
     {EM_MIPS_RS3_LE, EM_MIPS_RS3_LE, ELFCLASS32, ELFDATA2LSB, (char*)"MIPSel"},
     {EM_MIPS,        EM_MIPS,    ELFCLASS32, ELFDATA2MSB, (char*)"MIPS"},
     {EM_PARISC,      EM_PARISC,  ELFCLASS32, ELFDATA2MSB, (char*)"PARISC"},
-    {EM_68K,         EM_68K,     ELFCLASS32, ELFDATA2MSB, (char*)"M68k"}
+    {EM_68K,         EM_68K,     ELFCLASS32, ELFDATA2MSB, (char*)"M68k"},
+    {EM_RISCV,       EM_RISCV,   ELFCLASS64, ELFDATA2LSB, (char*)"RISCV64"}
   };
 
   #if  (defined IA32)
@@ -1202,9 +1209,11 @@ void * os::dll_load(const char *filename, char *ebuf, int ebuflen) {
   static  Elf32_Half running_arch_code=EM_MIPS;
   #elif  (defined M68K)
   static  Elf32_Half running_arch_code=EM_68K;
+#elif  (defined RISCV)
+  static  Elf32_Half running_arch_code=EM_RISCV;
   #else
     #error Method os::dll_load requires that one of following is defined:\
-         IA32, AMD64, IA64, __powerpc__, ARM, AARCH64, S390, ALPHA, MIPS, MIPSEL, PARISC, M68K
+         IA32, AMD64, IA64, __powerpc__, ARM, AARCH64, S390, ALPHA, MIPS, MIPSEL, PARISC, M68K, RISCV
   #endif
 
   // Identify compatibility class for VM's architecture and library's architecture
