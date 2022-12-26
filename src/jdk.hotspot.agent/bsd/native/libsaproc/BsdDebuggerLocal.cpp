@@ -55,6 +55,10 @@
 #include "sun_jvm_hotspot_debugger_aarch64_AARCH64ThreadContext.h"
 #endif
 
+#ifdef riscv64
+#include "sun_jvm_hotspot_debugger_riscv64_RISCV64ThreadContext.h"
+#endif
+
 class AutoJavaString {
   JNIEnv* m_env;
   jstring m_str;
@@ -362,6 +366,9 @@ JNIEXPORT jlongArray JNICALL Java_sun_jvm_hotspot_debugger_bsd_BsdDebuggerLocal_
 #ifdef aarch64
 #define NPRGREG sun_jvm_hotspot_debugger_aarch64_AARCH64ThreadContext_NPRGREG
 #endif
+#ifdef riscv64
+#define NPRGREG sun_jvm_hotspot_debugger_riscv64_RISCV64ThreadContext_NPRGREG
+#endif
 
   array = env->NewLongArray(NPRGREG);
   CHECK_EXCEPTION_(0);
@@ -510,6 +517,44 @@ JNIEXPORT jlongArray JNICALL Java_sun_jvm_hotspot_debugger_bsd_BsdDebuggerLocal_
     regs[REG_INDEX(PC)] = gregs.elr;
   }
 #endif /* aarch64 */
+
+#if defined(riscv64)
+#define REG_INDEX(reg)  sun_jvm_hotspot_debugger_riscv64_RISCV64ThreadContext_##reg
+
+  regs[REG_INDEX(PC)]  = gregs.sepc;
+  regs[REG_INDEX(LR)]  = gregs.ra;
+  regs[REG_INDEX(SP)]  = gregs.sp;
+  regs[REG_INDEX(R3)]  = gregs.gp;
+  regs[REG_INDEX(R4)]  = gregs.tp;
+  regs[REG_INDEX(R5)]  = gregs.t[0];
+  regs[REG_INDEX(R6)]  = gregs.t[1];
+  regs[REG_INDEX(R7)]  = gregs.t[2];
+  regs[REG_INDEX(R8)]  = gregs.s[0];
+  regs[REG_INDEX(R9)]  = gregs.s[1];
+  regs[REG_INDEX(R10)]  = gregs.a[0];
+  regs[REG_INDEX(R11)]  = gregs.a[1];
+  regs[REG_INDEX(R12)]  = gregs.a[2];
+  regs[REG_INDEX(R13)]  = gregs.a[3];
+  regs[REG_INDEX(R14)]  = gregs.a[4];
+  regs[REG_INDEX(R15)]  = gregs.a[5];
+  regs[REG_INDEX(R16)]  = gregs.a[6];
+  regs[REG_INDEX(R17)]  = gregs.a[7];
+  regs[REG_INDEX(R18)]  = gregs.s[2];
+  regs[REG_INDEX(R19)]  = gregs.s[3];
+  regs[REG_INDEX(R20)]  = gregs.s[4];
+  regs[REG_INDEX(R21)]  = gregs.s[5];
+  regs[REG_INDEX(R22)]  = gregs.s[6];
+  regs[REG_INDEX(R23)]  = gregs.s[7];
+  regs[REG_INDEX(R24)]  = gregs.s[8];
+  regs[REG_INDEX(R25)]  = gregs.s[9];
+  regs[REG_INDEX(R26)]  = gregs.s[10];
+  regs[REG_INDEX(R27)]  = gregs.s[11];
+  regs[REG_INDEX(R28)]  = gregs.t[3];
+  regs[REG_INDEX(R29)]  = gregs.t[4];
+  regs[REG_INDEX(R30)]  = gregs.t[5];
+  regs[REG_INDEX(R31)]  = gregs.t[6];
+
+#endif /* riscv64 */
 
 
   env->ReleaseLongArrayElements(array, regs, JNI_COMMIT);
