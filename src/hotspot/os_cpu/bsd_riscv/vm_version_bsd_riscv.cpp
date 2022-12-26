@@ -29,55 +29,24 @@
 #include "runtime/os.inline.hpp"
 #include "runtime/vm_version.hpp"
 
-#include <asm/hwcap.h>
 #include <sys/auxv.h>
-
-#ifndef HWCAP_ISA_I
-#define HWCAP_ISA_I  (1 << ('I' - 'A'))
-#endif
-
-#ifndef HWCAP_ISA_M
-#define HWCAP_ISA_M  (1 << ('M' - 'A'))
-#endif
-
-#ifndef HWCAP_ISA_A
-#define HWCAP_ISA_A  (1 << ('A' - 'A'))
-#endif
-
-#ifndef HWCAP_ISA_F
-#define HWCAP_ISA_F  (1 << ('F' - 'A'))
-#endif
-
-#ifndef HWCAP_ISA_D
-#define HWCAP_ISA_D  (1 << ('D' - 'A'))
-#endif
-
-#ifndef HWCAP_ISA_C
-#define HWCAP_ISA_C  (1 << ('C' - 'A'))
-#endif
-
-#ifndef HWCAP_ISA_V
-#define HWCAP_ISA_V  (1 << ('V' - 'A'))
-#endif
-
-#define read_csr(csr)                                           \
-({                                                              \
-        register unsigned long __v;                             \
-        __asm__ __volatile__ ("csrr %0, %1"                     \
-                              : "=r" (__v)                      \
-                              : "i" (csr)                       \
-                              : "memory");                      \
-        __v;                                                    \
-})
 
 uint32_t VM_Version::get_current_vector_length() {
   assert(_features & CPU_V, "should not call this");
-  return (uint32_t)read_csr(CSR_VLENB);
+//  return (uint32_t)read_csr(CSR_VLENB);
+
+// https://lists.gnu.org/archive/html/qemu-riscv/2021-11/msg00386.html
+//  csr_read(0xc22);
+  return 0;
 }
 
 void VM_Version::get_os_cpu_info() {
+  _features = 0;
 
-  uint64_t auxv = getauxval(AT_HWCAP);
+  unsigned long auxv;
+  if(elf_aux_info(AT_HWCAP, &auxv, sizeof(unsigned long)) != 0) {
+    auxv = 0;
+  }
 
   static_assert(CPU_I == HWCAP_ISA_I, "Flag CPU_I must follow Bsd HWCAP");
   static_assert(CPU_M == HWCAP_ISA_M, "Flag CPU_M must follow Bsd HWCAP");
@@ -85,7 +54,6 @@ void VM_Version::get_os_cpu_info() {
   static_assert(CPU_F == HWCAP_ISA_F, "Flag CPU_F must follow Bsd HWCAP");
   static_assert(CPU_D == HWCAP_ISA_D, "Flag CPU_D must follow Bsd HWCAP");
   static_assert(CPU_C == HWCAP_ISA_C, "Flag CPU_C must follow Bsd HWCAP");
-  static_assert(CPU_V == HWCAP_ISA_V, "Flag CPU_V must follow Bsd HWCAP");
 
   // RISC-V has four bit-manipulation ISA-extensions: Zba/Zbb/Zbc/Zbs.
   // Availability for those extensions could not be queried from HWCAP.
@@ -96,21 +64,5 @@ void VM_Version::get_os_cpu_info() {
       HWCAP_ISA_A |
       HWCAP_ISA_F |
       HWCAP_ISA_D |
-      HWCAP_ISA_C |
-      HWCAP_ISA_V);
-
-  if (FILE *f = fopen("/proc/cpuinfo", "r")) {
-    char buf[512], *p;
-    while (fgets(buf, sizeof (buf), f) != NULL) {
-      if ((p = strchr(buf, ':')) != NULL) {
-        if (strncmp(buf, "uarch", sizeof "uarch" - 1) == 0) {
-          char* uarch = os::strdup(p + 2);
-          uarch[strcspn(uarch, "\n")] = '\0';
-          _uarch = uarch;
-          break;
-        }
-      }
-    }
-    fclose(f);
-  }
+      HWCAP_ISA_C);
 }
